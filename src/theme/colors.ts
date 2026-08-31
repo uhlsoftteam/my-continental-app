@@ -8,6 +8,8 @@ export const colors = {
   gray300: '#D1D5DB',
   gray400: '#9CA3AF',
   gray500: '#6B7280',
+  gray600: '#4B5563',
+  gray700: '#374151',
   gray900: '#111827',
   error: '#EF4444',
   success: '#10B981',

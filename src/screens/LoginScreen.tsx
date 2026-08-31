@@ -1,191 +1,181 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, ImageBackground, Image, SafeAreaView } from 'react-native';
-import { colors } from '../theme/colors';
-import { sendOtp } from '../services/api';
-
-const BG_IMAGE = 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?ixlib=rb-4.0.3&auto=format&fit=crop&w=2128&q=80';
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Alert
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
+import { colors } from "../theme/colors";
+import { sendOtp } from "../services/api";
+import { getOrCreateDeviceId, getPinEnabledPhone, clearPinEnabledPhone } from "../utils/storage";
 
 export const LoginScreen = ({ navigation }: any) => {
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [deviceId, setDeviceId] = useState("");
+  const [pinEnabledPhoneState, setPinEnabledPhoneState] = useState<string | null>(null);
 
-  const handleContinue = async () => {
-    if (!phone || phone.length < 11) {
-      setError('Please enter a valid phone number');
+  useEffect(() => {
+    getOrCreateDeviceId().then(setDeviceId);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getPinEnabledPhone().then(setPinEnabledPhoneState);
+    }, [])
+  );
+
+  const handleContinue = async (force: boolean = false) => {
+    const digitsOnly = phone.replace(/\D/g, "");
+    
+    // Accept 10 digits (without 0) or 11 digits (with 0)
+    if (digitsOnly.length === 10 || (digitsOnly.length === 11 && digitsOnly.startsWith("0"))) {
+      setError("");
+    } else {
+      setError("Please enter a valid phone number");
       return;
     }
-    setError('');
-    
-    // Check if phone has pin enabled locally (simplified)
-    // Normally we'd use AsyncStorage to check if this device has a PIN for this phone.
-    
+
+    // Always send the 11-digit format to the backend
+    const formattedPhone = digitsOnly.length === 10 ? `0${digitsOnly}` : digitsOnly;
+
+    // PIN bypass check
+    if (formattedPhone === pinEnabledPhoneState && !force) {
+      navigation.navigate("VerifyPin", { phone: formattedPhone });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await sendOtp(phone);
-      navigation.navigate('OtpVerification', { phone });
+      await sendOtp(formattedPhone, deviceId, force);
+      navigation.navigate("OtpVerification", { phone: formattedPhone });
     } catch (err: any) {
-      // For now, if the API fails, we still navigate just for testing the flow if it's a dummy API,
-      // but in real world we show error. Let's show error.
-      const msg = err.response?.data?.message || 'Failed to send OTP';
-      setError(msg);
-      // For demo purposes, we can navigate anyway to demonstrate the flow if no real API:
-      // navigation.navigate('OtpVerification', { phone });
+      console.log('OTP Send Error:', err);
+      
+      if (err.response?.data?.status === "device_conflict") {
+        Alert.alert(
+          "Session Conflict",
+          err.response?.data?.message || "You are logged in on another device. Logging in here will sign you out everywhere else. Do you want to continue?",
+          [
+            { text: "Cancel", style: "cancel" },
+            { 
+              text: "Yes, login here", 
+              style: "destructive",
+              onPress: async () => {
+                await clearPinEnabledPhone();
+                handleContinue(true);
+              }
+            }
+          ]
+        );
+      } else {
+        const msg = err.response?.data?.message || err.message || "Failed to send OTP";
+        setError(msg);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <ImageBackground source={{ uri: BG_IMAGE }} style={styles.background}>
-      <View style={styles.overlay} />
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <View style={styles.card}>
-            {/* Logo placeholder - replace with actual local logo */}
-            <View style={styles.logoContainer}>
-              <Text style={styles.logoText}>Continental Hospital</Text>
-            </View>
-
-            <Text style={styles.title}>Patient Login</Text>
-            <Text style={styles.subtitle}>Enter your registered mobile number to continue.</Text>
-
-            <Text style={styles.label}>PHONE NUMBER</Text>
-            <View style={[styles.inputContainer, error ? styles.inputError : null]}>
-              <Text style={styles.prefix}>📞</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="017XXXXXXXX"
-                placeholderTextColor={colors.gray400}
-                keyboardType="phone-pad"
-                value={phone}
-                onChangeText={setPhone}
-                maxLength={11}
-              />
-            </View>
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-            <TouchableOpacity 
-              style={styles.button} 
-              onPress={handleContinue}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color={colors.white} />
-              ) : (
-                <Text style={styles.buttonText}>Continue</Text>
-              )}
-            </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.innerContainer}>
             
-            <Text style={styles.copyright}>© {new Date().getFullYear()} Continental Hospital</Text>
+            <View style={styles.contentContainer}>
+              <View style={styles.header}>
+                <Image
+                  source={require("../../assets/continental.png")}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Welcome</Text>
+                <Text style={styles.subtitle}>
+                  Sign in to manage your health records and appointments.
+                </Text>
+
+                <Text style={styles.label}>Mobile Number</Text>
+                <View
+                  style={[styles.inputWrapper, error ? styles.inputError : null]}
+                >
+                  <Text style={styles.prefix}>+880</Text>
+                  <View style={styles.divider} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="17XXXXXXXX"
+                    placeholderTextColor={colors.gray400}
+                    keyboardType="phone-pad"
+                    value={phone}
+                    onChangeText={setPhone}
+                    maxLength={10}
+                  />
+                </View>
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => handleContinue(false)}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color={colors.white} />
+                  ) : (
+                    <Text style={styles.buttonText}>Continue</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.footer}>
+              <Text style={styles.copyright}>
+                © {new Date().getFullYear()} Continental Hospital
+              </Text>
+            </View>
+
           </View>
-        </View>
-      </SafeAreaView>
-    </ImageBackground>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.primaryDark,
-    opacity: 0.85,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: 24,
-    padding: 30,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  logoText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: colors.primary,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.gray900,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.gray500,
-    marginBottom: 32,
-    lineHeight: 20,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: colors.gray500,
-    marginBottom: 8,
-    letterSpacing: 1,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderColor: colors.gray200,
-    paddingBottom: 10,
-    marginBottom: 8,
-  },
-  inputError: {
-    borderColor: colors.error,
-  },
-  prefix: {
-    fontSize: 18,
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    fontSize: 18,
-    color: colors.gray900,
-    fontWeight: '500',
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: 12,
-    marginBottom: 16,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  buttonText: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  copyright: {
-    textAlign: 'center',
-    color: colors.gray400,
-    fontSize: 10,
-    marginTop: 30,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
+  container: { flex: 1, backgroundColor: colors.white },
+  keyboardView: { flex: 1 },
+  innerContainer: { flex: 1, paddingHorizontal: 24 },
+  contentContainer: { flex: 1, justifyContent: "center" },
+  header: { alignItems: "center", marginBottom: 40 },
+  logo: { width: 200, height: 60 },
+  formContainer: {},
+  title: { fontSize: 26, fontWeight: "bold", color: colors.gray900, marginBottom: 8 },
+  subtitle: { fontSize: 14, color: colors.gray500, marginBottom: 36, lineHeight: 20 },
+  label: { fontSize: 12, fontWeight: "600", color: colors.gray700, marginBottom: 8 },
+  inputWrapper: { flexDirection: "row", alignItems: "center", borderWidth: 1, borderColor: colors.gray300, borderRadius: 8, paddingHorizontal: 16, height: 52, backgroundColor: "#F9FAFB", marginBottom: 8 },
+  inputError: { borderColor: colors.error, backgroundColor: "#FEF2F2" },
+  prefix: { fontSize: 16, fontWeight: "500", color: colors.gray700 },
+  divider: { width: 1, height: 24, backgroundColor: colors.gray300, marginHorizontal: 12 },
+  input: { flex: 1, fontSize: 16, color: colors.gray900, fontWeight: "500" },
+  errorText: { color: colors.error, fontSize: 12, marginBottom: 16, marginTop: -4 },
+  button: { backgroundColor: colors.primary, height: 52, borderRadius: 8, alignItems: "center", justifyContent: "center", marginTop: 16 },
+  buttonText: { color: colors.white, fontSize: 16, fontWeight: "600" },
+  footer: { paddingBottom: 24, alignItems: "center" },
+  copyright: { color: colors.gray400, fontSize: 12 },
 });
