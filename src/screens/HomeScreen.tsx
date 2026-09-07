@@ -228,6 +228,10 @@ export const HomeScreen = ({ navigation }: any) => {
       navigation.navigate('Doctors');
       return;
     }
+    if (href === 'Records') {
+      navigation.navigate('Records');
+      return;
+    }
     Alert.alert("Coming Soon", `Navigation to ${href} will be implemented soon.`);
   };
 

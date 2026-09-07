@@ -92,7 +92,7 @@ export const DoctorsScreen = ({ navigation }: any) => {
         <TouchableOpacity 
           style={styles.gridCard}
           activeOpacity={0.7}
-          onPress={() => navigation.navigate('Appointment', { doctor: item })}
+          onPress={() => navigation.navigate('DoctorProfile', { doctor: item })}
         >
           <View style={styles.gridAvatarContainer}>
             {imageUrl ? (
@@ -126,7 +126,7 @@ export const DoctorsScreen = ({ navigation }: any) => {
       <TouchableOpacity 
         style={styles.card}
         activeOpacity={0.7}
-        onPress={() => navigation.navigate('Appointment', { doctor: item })}
+        onPress={() => navigation.navigate('DoctorProfile', { doctor: item })}
       >
         <View style={styles.cardTopRow}>
           <View style={styles.avatarContainer}>

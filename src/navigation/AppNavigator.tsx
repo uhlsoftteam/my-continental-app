@@ -7,6 +7,8 @@ import { SetupPinScreen } from '../screens/SetupPinScreen';
 import { VerifyPinScreen } from '../screens/VerifyPinScreen';
 import { DoctorsScreen } from '../screens/DoctorsScreen';
 import { AppointmentScreen } from '../screens/AppointmentScreen';
+import { DoctorProfileScreen } from '../screens/DoctorProfileScreen';
+import { RecordsScreen } from '../screens/RecordsScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -16,6 +18,8 @@ export type RootStackParamList = {
   Home: undefined;
   Doctors: undefined;
   Appointment: { doctor: any };
+  DoctorProfile: { doctor: any };
+  Records: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,6 +40,8 @@ export const AppNavigator = () => {
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Doctors" component={DoctorsScreen} />
       <Stack.Screen name="Appointment" component={AppointmentScreen} />
+      <Stack.Screen name="DoctorProfile" component={DoctorProfileScreen} />
+      <Stack.Screen name="Records" component={RecordsScreen} />
     </Stack.Navigator>
   );
 };
