@@ -17,7 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "@react-navigation/native";
 import { colors } from "../theme/colors";
 import { sendOtp } from "../services/api";
-import { getOrCreateDeviceId, getPinEnabledPhone, clearPinEnabledPhone } from "../utils/storage";
+import { getOrCreateDeviceId, getPinEnabledPhone, clearPinEnabledPhone, getToken } from "../utils/storage";
 
 export const LoginScreen = ({ navigation }: any) => {
   const [phone, setPhone] = useState("");
@@ -27,7 +27,20 @@ export const LoginScreen = ({ navigation }: any) => {
   const [pinEnabledPhoneState, setPinEnabledPhoneState] = useState<string | null>(null);
 
   useEffect(() => {
-    getOrCreateDeviceId().then(setDeviceId);
+    const init = async () => {
+      const deviceId = await getOrCreateDeviceId();
+      setDeviceId(deviceId);
+
+      // Check if we already have a valid token
+      const token = await getToken();
+      if (token) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      }
+    };
+    init();
   }, []);
 
   useFocusEffect(

@@ -67,3 +67,18 @@ export const getMe = async () => {
   return response.data;
 };
 
+export const getDoctors = async () => {
+  const response = await api.get('doctors');
+  return response.data;
+};
+
+export const getDepartments = async () => {
+  const response = await api.get('departments');
+  return response.data;
+};
+
+export const createAppointment = async (data: any) => {
+  const response = await api.post('appointments', data);
+  return response.data;
+};
+

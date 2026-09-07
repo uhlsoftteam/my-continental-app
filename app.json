@@ -4,7 +4,12 @@
     "slug": "MyContinental",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/continental_hospital.jpg",
+    "splash": {
+      "image": "./assets/continental_hospital.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true

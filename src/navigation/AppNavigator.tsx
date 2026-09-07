@@ -5,6 +5,8 @@ import { OtpVerificationScreen } from '../screens/OtpVerificationScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { SetupPinScreen } from '../screens/SetupPinScreen';
 import { VerifyPinScreen } from '../screens/VerifyPinScreen';
+import { DoctorsScreen } from '../screens/DoctorsScreen';
+import { AppointmentScreen } from '../screens/AppointmentScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -12,6 +14,8 @@ export type RootStackParamList = {
   SetupPin: { phone: string };
   VerifyPin: { phone: string };
   Home: undefined;
+  Doctors: undefined;
+  Appointment: { doctor: any };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -30,6 +34,8 @@ export const AppNavigator = () => {
       <Stack.Screen name="SetupPin" component={SetupPinScreen} />
       <Stack.Screen name="VerifyPin" component={VerifyPinScreen} />
       <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Doctors" component={DoctorsScreen} />
+      <Stack.Screen name="Appointment" component={AppointmentScreen} />
     </Stack.Navigator>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, FlatList, Alert, ScrollView, Image, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, FlatList, Alert, ScrollView, Image, Linking, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 import { getMe, getCandidates, switchPatient, registerPatient } from '../services/api';
@@ -70,6 +70,13 @@ export const HomeScreen = ({ navigation }: any) => {
   const [switchUhidText, setSwitchUhidText] = useState("");
   const [isSwitching, setIsSwitching] = useState(false);
   const [patientPhone, setPhone] = useState("");
+  
+  const scrollY = React.useRef(new Animated.Value(0)).current;
+
+  const headerPaddingTop = scrollY.interpolate({ inputRange: [0, 100], outputRange: [20, 12], extrapolate: 'clamp' });
+  const headerPaddingBottom = scrollY.interpolate({ inputRange: [0, 100], outputRange: [24, 12], extrapolate: 'clamp' });
+  const subtitleHeight = scrollY.interpolate({ inputRange: [0, 50], outputRange: [20, 0], extrapolate: 'clamp' });
+  const subtitleOpacity = scrollY.interpolate({ inputRange: [0, 50], outputRange: [1, 0], extrapolate: 'clamp' });
   
   useEffect(() => {
     loadData();
@@ -217,6 +224,10 @@ export const HomeScreen = ({ navigation }: any) => {
       });
       return;
     }
+    if (href === 'Doctors') {
+      navigation.navigate('Doctors');
+      return;
+    }
     Alert.alert("Coming Soon", `Navigation to ${href} will be implemented soon.`);
   };
 
@@ -224,9 +235,11 @@ export const HomeScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
+      <Animated.View style={[styles.header, { paddingTop: headerPaddingTop, paddingBottom: headerPaddingBottom }]}>
          <View style={{ flex: 1, paddingRight: 16 }}>
-           <Text style={styles.headerSubtitle} numberOfLines={1}>{currentDate}</Text>
+           <Animated.View style={{ height: subtitleHeight, opacity: subtitleOpacity, overflow: 'hidden' }}>
+             <Text style={styles.headerSubtitle} numberOfLines={1}>{currentDate}</Text>
+           </Animated.View>
            {loading ? (
              <ActivityIndicator color={colors.white} size="small" style={{marginTop: 4, alignSelf: 'flex-start'}} />
            ) : (
@@ -244,10 +257,18 @@ export const HomeScreen = ({ navigation }: any) => {
               <FontAwesome5 name="sign-out-alt" size={14} color={colors.white} />
            </TouchableOpacity>
          </View>
-      </View>
+      </Animated.View>
       
       <View style={styles.contentWrapper}>
-        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <Animated.ScrollView 
+          contentContainerStyle={styles.scrollContainer} 
+          showsVerticalScrollIndicator={false}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+        >
 
           <Text style={styles.sectionTitle}>Dashboard</Text>
           
@@ -263,7 +284,7 @@ export const HomeScreen = ({ navigation }: any) => {
           </TouchableOpacity>
           
           <View style={styles.footerSpace} />
-        </ScrollView>
+        </Animated.ScrollView>
       </View>
       
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
@@ -339,8 +360,8 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     backgroundColor: colors.primary,
   },
-  headerSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: 'Inter_600SemiBold', textTransform: 'uppercase', letterSpacing: 0.5 },
-  headerTitle: { fontSize: 16, fontFamily: 'Inter_700Bold', color: colors.white, marginTop: 4, textTransform: 'capitalize' },
+  headerSubtitle: { fontSize: 10, color: 'rgba(255,255,255,0.7)', fontFamily: 'Inter_600SemiBold', textTransform: 'uppercase', letterSpacing: 0.5 },
+  headerTitle: { fontSize: 14, fontFamily: 'Inter_700Bold', color: colors.white, marginTop: 4, textTransform: 'capitalize' },
   switchHeaderBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', flexShrink: 0 },
   switchHeaderBtnText: { color: colors.white, fontSize: 13, fontFamily: 'Inter_600SemiBold' },
   
