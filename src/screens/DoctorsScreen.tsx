@@ -26,7 +26,7 @@ export const DoctorsScreen = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState<string>('All');
   const [showDeptModal, setShowDeptModal] = useState(false);
-  const [isGridView, setIsGridView] = useState(false);
+  const [isGridView, setIsGridView] = useState(true);
 
   // Animation values
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -96,7 +96,7 @@ export const DoctorsScreen = ({ navigation }: any) => {
         >
           <View style={styles.gridAvatarContainer}>
             {imageUrl ? (
-              <Image source={{ uri: imageUrl }} style={styles.gridAvatar} />
+              <Image source={{ uri: imageUrl }} style={styles.gridAvatar} resizeMode="contain" />
             ) : (
               <View style={[styles.gridAvatar, styles.placeholderAvatar]}>
                 <FontAwesome5 name="user-md" size={32} color={colors.primary} />
@@ -114,9 +114,7 @@ export const DoctorsScreen = ({ navigation }: any) => {
             </Text>
           )}
 
-          <View style={styles.gridBookBtn}>
-            <Text style={styles.gridBookBtnText}>Book Appointment</Text>
-          </View>
+
         </TouchableOpacity>
       );
     }
@@ -131,7 +129,7 @@ export const DoctorsScreen = ({ navigation }: any) => {
         <View style={styles.cardTopRow}>
           <View style={styles.avatarContainer}>
             {imageUrl ? (
-              <Image source={{ uri: imageUrl }} style={styles.avatar} />
+              <Image source={{ uri: imageUrl }} style={styles.avatar} resizeMode="contain" />
             ) : (
               <View style={[styles.avatar, styles.placeholderAvatar]}>
                 <FontAwesome5 name="user-md" size={24} color={colors.primary} />
@@ -162,9 +160,7 @@ export const DoctorsScreen = ({ navigation }: any) => {
               </Text>
             ) : null}
           </View>
-          <View style={styles.bookButtonSmall}>
-            <Text style={styles.bookButtonTextSmall}>Book Appointment</Text>
-          </View>
+
         </View>
       </TouchableOpacity>
     );

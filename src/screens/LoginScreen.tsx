@@ -77,21 +77,32 @@ export const LoginScreen = ({ navigation }: any) => {
       console.log('OTP Send Error:', err);
       
       if (err.response?.data?.status === "device_conflict") {
-        Alert.alert(
-          "Session Conflict",
-          err.response?.data?.message || "You are logged in on another device. Logging in here will sign you out everywhere else. Do you want to continue?",
-          [
-            { text: "Cancel", style: "cancel" },
-            { 
-              text: "Yes, login here", 
-              style: "destructive",
-              onPress: async () => {
-                await clearPinEnabledPhone();
-                handleContinue(true);
+        const conflictMsg = err.response?.data?.message || "You are logged in on another device. Logging in here will sign you out everywhere else. Do you want to continue?";
+        
+        if (Platform.OS === "web") {
+          const userConfirmed = window.confirm(conflictMsg);
+          if (userConfirmed) {
+            clearPinEnabledPhone().then(() => {
+              handleContinue(true);
+            });
+          }
+        } else {
+          Alert.alert(
+            "Session Conflict",
+            conflictMsg,
+            [
+              { text: "Cancel", style: "cancel" },
+              { 
+                text: "Yes, login here", 
+                style: "destructive",
+                onPress: async () => {
+                  await clearPinEnabledPhone();
+                  handleContinue(true);
+                }
               }
-            }
-          ]
-        );
+            ]
+          );
+        }
       } else {
         const msg = err.response?.data?.message || err.message || "Failed to send OTP";
         setError(msg);
@@ -107,7 +118,7 @@ export const LoginScreen = ({ navigation }: any) => {
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        {Platform.OS === "web" ? (
           <View style={styles.innerContainer}>
             
             <View style={styles.contentContainer}>
@@ -164,7 +175,66 @@ export const LoginScreen = ({ navigation }: any) => {
             </View>
 
           </View>
-        </TouchableWithoutFeedback>
+        ) : (
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.innerContainer}>
+              
+              <View style={styles.contentContainer}>
+                <View style={styles.header}>
+                  <Image
+                    source={require("../../assets/continental.png")}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
+                </View>
+
+                <View style={styles.formContainer}>
+                  <Text style={styles.title}>Welcome</Text>
+                  <Text style={styles.subtitle}>
+                    Sign in to manage your health records and appointments.
+                  </Text>
+
+                  <Text style={styles.label}>Mobile Number</Text>
+                  <View
+                    style={[styles.inputWrapper, error ? styles.inputError : null]}
+                  >
+                    <Text style={styles.prefix}>+880</Text>
+                    <View style={styles.divider} />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="17XXXXXXXX"
+                      placeholderTextColor={colors.gray400}
+                      keyboardType="phone-pad"
+                      value={phone}
+                      onChangeText={setPhone}
+                      maxLength={10}
+                    />
+                  </View>
+                  {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => handleContinue(false)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color={colors.white} />
+                    ) : (
+                      <Text style={styles.buttonText}>Continue</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <View style={styles.footer}>
+                <Text style={styles.copyright}>
+                  © {new Date().getFullYear()} Continental Hospital
+                </Text>
+              </View>
+
+            </View>
+          </TouchableWithoutFeedback>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

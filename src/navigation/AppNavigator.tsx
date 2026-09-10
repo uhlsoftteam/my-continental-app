@@ -9,6 +9,7 @@ import { DoctorsScreen } from '../screens/DoctorsScreen';
 import { AppointmentScreen } from '../screens/AppointmentScreen';
 import { DoctorProfileScreen } from '../screens/DoctorProfileScreen';
 import { RecordsScreen } from '../screens/RecordsScreen';
+import { PackageDetailsScreen } from '../screens/PackageDetailsScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -20,6 +21,7 @@ export type RootStackParamList = {
   Appointment: { doctor: any };
   DoctorProfile: { doctor: any };
   Records: undefined;
+  PackageDetails: { packageData: any };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,6 +44,7 @@ export const AppNavigator = () => {
       <Stack.Screen name="Appointment" component={AppointmentScreen} />
       <Stack.Screen name="DoctorProfile" component={DoctorProfileScreen} />
       <Stack.Screen name="Records" component={RecordsScreen} />
+      <Stack.Screen name="PackageDetails" component={PackageDetailsScreen} />
     </Stack.Navigator>
   );
 };

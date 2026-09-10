@@ -2,9 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, ActivityIndicator, FlatList, Alert, ScrollView, Image, Linking, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
-import { getMe, getCandidates, switchPatient, registerPatient } from '../services/api';
+import { getMe, getCandidates, switchPatient, registerPatient, getPackages } from '../services/api';
 import { removeToken, getDeviceLinkedUhids, addDeviceLinkedUhid, getOrCreateDeviceId, getPatientPhone, setToken } from '../utils/storage';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { LabTrendWidget } from '../components/LabTrendWidget';
+import { PackageCard } from '../components/PackageCard';
+
+const ALL_LAB_TRENDS = [
+  { code: 600000339, title: "Platelets", accentColor: "#8D4956" },
+  { code: 600000336, title: "Haemoglobin", accentColor: "#D67B80" },
+  { code: 600000216, title: "LDL", accentColor: "#DDBD8E" },
+  { code: 600000214, title: "Cholesterol", accentColor: "#5E2131" },
+  { code: 600000199, title: "S. Creatinine", accentColor: "#8D4956" },
+  { code: 600000191, title: "HbA1c", accentColor: "#8D4956" },
+];
 
 const ActionCard = ({ item, onPress }: any) => {
   const { icon, bgIcon, title, accent, disabled, feature } = item;
@@ -71,6 +82,15 @@ export const HomeScreen = ({ navigation }: any) => {
   const [isSwitching, setIsSwitching] = useState(false);
   const [patientPhone, setPhone] = useState("");
   
+  // Health Trends State
+  const [enabledTrends, setEnabledTrends] = useState<number[]>(ALL_LAB_TRENDS.map(t => t.code));
+  const [showTrendModal, setShowTrendModal] = useState(false);
+  const [tempEnabledTrends, setTempEnabledTrends] = useState<number[]>([]);
+  
+  // Packages State
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  
   const scrollY = React.useRef(new Animated.Value(0)).current;
 
   const headerPaddingTop = scrollY.interpolate({ inputRange: [0, 100], outputRange: [20, 12], extrapolate: 'clamp' });
@@ -93,6 +113,20 @@ export const HomeScreen = ({ navigation }: any) => {
       if (meRes.patient && !meRes.patient.uhid) {
         openSwitchModal();
       }
+
+      // Fetch Packages
+      setLoadingPackages(true);
+      try {
+        const pkgRes = await getPackages(1, 20); // Increased limit from 5 to 20
+        if (pkgRes.data) {
+          setPackages(pkgRes.data);
+        }
+      } catch (e) {
+        console.log('Error fetching packages', e);
+      } finally {
+        setLoadingPackages(false);
+      }
+
     } catch (e) {
       console.log('Error fetching me', e);
     } finally {
@@ -224,6 +258,10 @@ export const HomeScreen = ({ navigation }: any) => {
       });
       return;
     }
+    if (href === 'Appointment') {
+      navigation.navigate('Appointment');
+      return;
+    }
     if (href === 'Doctors') {
       navigation.navigate('Doctors');
       return;
@@ -283,6 +321,68 @@ export const HomeScreen = ({ navigation }: any) => {
             ))}
           </View>
 
+          {/* Health Trends Section */}
+          {isConfirmed && (
+            <View style={{ marginTop: 24, marginBottom: 16 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingHorizontal: 4 }}>
+                <View>
+                  <Text style={styles.sectionTitle}>Your Health Trends</Text>
+                  <Text style={{ fontSize: 12, color: '#64748B', fontFamily: 'Inter_400Regular', marginTop: -8 }}>Historical analysis of key markers</Text>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => {
+                    setTempEnabledTrends([...enabledTrends]);
+                    setShowTrendModal(true);
+                  }}
+                  style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#F8FAFC', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 }}
+                >
+                  <FontAwesome5 name="cog" size={12} color="#8D4956" />
+                  <Text style={{ marginLeft: 6, fontSize: 12, color: '#334155', fontFamily: 'Inter_600SemiBold' }}>Customize</Text>
+                </TouchableOpacity>
+              </View>
+              
+              {enabledTrends.length > 0 ? (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16, paddingBottom: 8 }}>
+                  {ALL_LAB_TRENDS.filter(t => enabledTrends.includes(t.code)).map((trend) => (
+                    <LabTrendWidget key={trend.code} testCode={trend.code} title={trend.title} accentColor={trend.accentColor} patient={patient} />
+                  ))}
+                </ScrollView>
+              ) : (
+                <View style={{ backgroundColor: '#F8FAFC', borderRadius: 16, padding: 24, alignItems: 'center', marginHorizontal: 4, borderWidth: 1, borderColor: '#F1F5F9' }}>
+                  <Text style={{ color: '#94A3B8', fontSize: 14, fontFamily: 'Inter_400Regular', marginBottom: 12 }}>You have hidden all health trends.</Text>
+                  <TouchableOpacity 
+                    onPress={() => {
+                      setTempEnabledTrends([...enabledTrends]);
+                      setShowTrendModal(true);
+                    }}
+                  >
+                    <Text style={{ color: '#8D4956', fontSize: 14, fontFamily: 'Inter_600SemiBold' }}>Customize View</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Recommended Packages Section */}
+          <View style={{ marginTop: 16, marginBottom: 24 }}>
+            <View style={{ marginBottom: 16, paddingHorizontal: 4 }}>
+              <Text style={styles.sectionTitle}>Recommended Packages</Text>
+              <Text style={{ fontSize: 12, color: '#64748B', fontFamily: 'Inter_400Regular', marginTop: -8 }}>Explore our comprehensive health packages</Text>
+            </View>
+            
+            {loadingPackages ? (
+              <View style={{ height: 160, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator color={colors.primary} />
+              </View>
+            ) : packages.length > 0 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingRight: 16, paddingBottom: 8 }}>
+                {packages.map((pkg: any) => (
+                  <PackageCard key={pkg._id} data={pkg} />
+                ))}
+              </ScrollView>
+            ) : null}
+          </View>
+
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
@@ -290,6 +390,57 @@ export const HomeScreen = ({ navigation }: any) => {
           <View style={styles.footerSpace} />
         </Animated.ScrollView>
       </View>
+      
+      {/* Trend Customization Modal */}
+      <Modal visible={showTrendModal} animationType="slide" transparent={true}>
+         <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+               <View style={styles.modalHeader}>
+                 <View>
+                   <Text style={styles.modalTitle}>Customize Trends</Text>
+                   <Text style={styles.modalSubtitle}>Select which health markers to display</Text>
+                 </View>
+                 <TouchableOpacity style={styles.closeBtnWrapper} onPress={() => setShowTrendModal(false)}>
+                   <Text style={styles.closeBtn}>X</Text>
+                 </TouchableOpacity>
+               </View>
+               
+               <ScrollView style={{ maxHeight: 300, marginBottom: 20 }}>
+                 {ALL_LAB_TRENDS.map((trend) => {
+                   const isSelected = tempEnabledTrends.includes(trend.code);
+                   return (
+                     <TouchableOpacity 
+                       key={trend.code}
+                       style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' }}
+                       onPress={() => {
+                         if (isSelected) {
+                           setTempEnabledTrends(tempEnabledTrends.filter(c => c !== trend.code));
+                         } else {
+                           setTempEnabledTrends([...tempEnabledTrends, trend.code]);
+                         }
+                       }}
+                     >
+                       <View style={{ width: 24, height: 24, borderRadius: 6, borderWidth: 2, borderColor: isSelected ? colors.primary : '#CBD5E1', backgroundColor: isSelected ? colors.primary : 'transparent', alignItems: 'center', justifyContent: 'center', marginRight: 12 }}>
+                         {isSelected && <FontAwesome5 name="check" size={12} color="#fff" />}
+                       </View>
+                       <Text style={{ fontSize: 15, fontFamily: 'Inter_500Medium', color: '#1E293B' }}>{trend.title}</Text>
+                     </TouchableOpacity>
+                   );
+                 })}
+               </ScrollView>
+               
+               <TouchableOpacity 
+                 style={styles.linkBtn}
+                 onPress={() => {
+                   setEnabledTrends(tempEnabledTrends);
+                   setShowTrendModal(false);
+                 }}
+               >
+                 <Text style={styles.linkBtnText}>Save Preferences</Text>
+               </TouchableOpacity>
+            </View>
+         </View>
+      </Modal>
       
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
          <View style={styles.modalOverlay}>

@@ -10,7 +10,9 @@ export const api = axios.create({
   },
 });
 
-import { getToken } from '../utils/storage';
+import { getToken, removeToken, clearPinEnabledPhone, clearDeviceLinkedUhids } from '../utils/storage';
+import { resetToLogin } from '../navigation/navigationRef';
+import { Alert, Platform } from 'react-native';
 
 api.interceptors.request.use(async (config) => {
   try {
@@ -21,6 +23,38 @@ api.interceptors.request.use(async (config) => {
   } catch (e) {}
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => {
+    // Also check if the body has a forceLogout flag (even on 200)
+    if (response.data && response.data.forceLogout === true) {
+      handleForceLogout(response.data.message);
+      return Promise.reject(new Error(response.data.message));
+    }
+    return response;
+  },
+  async (error) => {
+    if (error.response) {
+      if (error.response.status === 401 || (error.response.data && error.response.data.forceLogout === true)) {
+        const msg = error.response.data?.message || 'Session expired. Please log in again.';
+        handleForceLogout(msg);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
+const handleForceLogout = async (message: string) => {
+  await removeToken();
+  await clearPinEnabledPhone();
+  await clearDeviceLinkedUhids();
+  if (Platform.OS === 'web') {
+    window.alert(message);
+  } else {
+    Alert.alert('Session Expired', message);
+  }
+  resetToLogin();
+};
 
 export const sendOtp = async (phone: string, deviceId: string, force?: boolean) => {
   const response = await api.post('patient-auth/send-otp', { phone, deviceId, force });
@@ -82,3 +116,12 @@ export const createAppointment = async (data: any) => {
   return response.data;
 };
 
+export const getLabAnalysis = async (labTestCode: string | number) => {
+  const response = await api.get('ehr/lab/analysis', { params: { labTestCode } });
+  return response.data;
+};
+
+export const getPackages = async (page: number = 1, limit: number = 6) => {
+  const response = await api.get('packages', { params: { page, limit } });
+  return response.data;
+};

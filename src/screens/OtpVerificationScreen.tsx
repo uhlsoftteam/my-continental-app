@@ -118,7 +118,7 @@ export const OtpVerificationScreen = ({ route, navigation }: any) => {
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        {Platform.OS === "web" ? (
           <View style={styles.innerContainer}>
             
             <View style={styles.header}>
@@ -182,7 +182,73 @@ export const OtpVerificationScreen = ({ route, navigation }: any) => {
             </View>
 
           </View>
-        </TouchableWithoutFeedback>
+        ) : (
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.innerContainer}>
+              
+              <View style={styles.header}>
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={styles.backButton}
+                >
+                  <Text style={styles.backButtonText}>← Back</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Verify Number</Text>
+                <Text style={styles.subtitle}>
+                  We've sent a 6-digit verification code to {phone}.
+                </Text>
+
+                <Text style={styles.label}>Security Code</Text>
+                <View
+                  style={[styles.inputWrapper, error ? styles.inputError : null]}
+                >
+                  <TextInput
+                    style={styles.input}
+                    placeholder="• • • • • •"
+                    placeholderTextColor={colors.gray400}
+                    keyboardType="number-pad"
+                    value={otp}
+                    onChangeText={setOtp}
+                    maxLength={6}
+                    textContentType="oneTimeCode"
+                    autoComplete="sms-otp"
+                  />
+                </View>
+                {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={handleVerify}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color={colors.white} />
+                  ) : (
+                    <Text style={styles.buttonText}>Verify & Login</Text>
+                  )}
+                </TouchableOpacity>
+
+                <View style={styles.resendContainer}>
+                  <Text style={styles.resendText}>Didn't receive the code? </Text>
+                  <TouchableOpacity disabled={countdown > 0}>
+                    <Text
+                      style={[
+                        styles.resendLink,
+                        countdown > 0 && styles.resendDisabled,
+                      ]}
+                    >
+                      {countdown > 0 ? `Resend in ${countdown}s` : "Resend Now"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+            </View>
+          </TouchableWithoutFeedback>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
