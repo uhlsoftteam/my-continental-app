@@ -5,7 +5,7 @@ import { getLabAnalysis } from '../services/api';
 import { getSafeRange } from '../utils/labReferenceRanges';
 
 const fmt = (d?: string | null) => {
-  if (!d) return "—";
+  if (!d) return "â€”";
   try {
     let dateObj = new Date(d);
     if (isNaN(dateObj.getTime())) {
@@ -18,17 +18,14 @@ const fmt = (d?: string | null) => {
     if (isNaN(dateObj.getTime())) {
       return d;
     }
-    return dateObj.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    const pad = (n: number) => n < 10 ? '0' + n : n;
+    return `${pad(dateObj.getDate())}-${pad(dateObj.getMonth() + 1)}-${dateObj.getFullYear()}`;
   } catch {
     return d;
   }
 };
 
-export const LabTrendWidget = ({ testCode, title, accentColor = "#8D4956", patient }: any) => {
+export const LabTrendWidget = ({ testCode, title, accentColor = '#8D4956', patient, fullWidth }: any) => {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -152,7 +149,7 @@ export const LabTrendWidget = ({ testCode, title, accentColor = "#8D4956", patie
   const range = maxVal - minVal;
 
   return (
-    <View style={[styles.card, { borderTopColor: accentColor }]}>
+    <View style={[styles.card, { borderTopColor: accentColor }, fullWidth && { width: '100%', marginRight: 0 }]}>
       <Text style={styles.title} numberOfLines={1}>{title}</Text>
       <Text style={styles.reference} numberOfLines={1}>Ref: {reference}</Text>
       
@@ -340,3 +337,5 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium'
   }
 });
+
+

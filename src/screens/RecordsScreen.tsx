@@ -28,17 +28,22 @@ const RecordCard = ({ item, onPress }: any) => {
 };
 
 export const RecordsScreen = ({ navigation }: any) => {
+
   const scrollY = React.useRef(new Animated.Value(0)).current;
 
   const records = [
     { id: '1', icon: 'notes-medical', title: 'Lab Results (Data)', desc: 'View your clinical health records and lab results.', accent: '#5E2131' },
     { id: '2', icon: 'pills', title: 'Prescriptions', desc: 'Access your medication history and prescriptions.', accent: '#10B981' },
     { id: '3', icon: 'file-alt', title: 'Discharge Summaries', desc: 'Read your hospital discharge summaries and notes.', accent: '#F59E0B' },
-    { id: '4', icon: 'calendar-check', title: 'Pending Appointments', desc: 'Check your upcoming and pending appointments.', accent: '#8B5CF6' },
-    { id: '5', icon: 'file-invoice-dollar', title: 'Pending Dues', desc: 'View your billing history and pending payments.', accent: '#EF4444' },
+    { id: '4', icon: 'calendar-check', title: 'Appointments', desc: 'Check your past and upcoming appointments.', accent: '#8B5CF6' },
+    { id: '5', icon: 'file-invoice-dollar', title: 'Bills', desc: 'View your billing history and payments.', accent: '#EF4444' },
   ];
 
   const handlePress = (title: string) => {
+    if (title === "Lab Results (Data)") return navigation.navigate("LabRecords");
+    if (title === "Prescriptions") return navigation.navigate("Prescriptions");
+    if (title === "Discharge Summaries") return navigation.navigate("DischargeSummaries");
+    if (title === "Appointments" || title === "Bills") return navigation.navigate("Pendings", { isHistory: true, initialTab: title === "Appointments" ? 'appointments' : 'bills' });
     Alert.alert("Coming Soon", `${title} will be implemented soon.`);
   };
 
@@ -122,3 +127,7 @@ const styles = StyleSheet.create({
   cardDesc: { fontSize: 13, fontFamily: 'Inter_400Regular', color: '#64748B', lineHeight: 18 },
   arrowWrapper: { marginLeft: 12, opacity: 0.5 },
 });
+
+
+
+

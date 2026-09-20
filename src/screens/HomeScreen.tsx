@@ -8,7 +8,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { LabTrendWidget } from '../components/LabTrendWidget';
 import { PackageCard } from '../components/PackageCard';
 
-const ALL_LAB_TRENDS = [
+export const ALL_LAB_TRENDS = [
   { code: 600000339, title: "Platelets", accentColor: "#8D4956" },
   { code: 600000336, title: "Haemoglobin", accentColor: "#D67B80" },
   { code: 600000216, title: "LDL", accentColor: "#DDBD8E" },
@@ -270,6 +270,10 @@ export const HomeScreen = ({ navigation }: any) => {
       navigation.navigate('Records');
       return;
     }
+    if (href === 'Lab') {
+      navigation.navigate('LabReports');
+      return;
+    }
     Alert.alert("Coming Soon", `Navigation to ${href} will be implemented soon.`);
   };
 
@@ -451,7 +455,7 @@ export const HomeScreen = ({ navigation }: any) => {
                    <Text style={styles.modalSubtitle}>Profiles for {patientPhone}</Text>
                  </View>
                  <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeBtnWrapper}>
-                   <Text style={styles.closeBtn}>✕</Text>
+                   <Text style={styles.closeBtn}>X</Text>
                  </TouchableOpacity>
                </View>
                

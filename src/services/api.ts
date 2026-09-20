@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Hardcoding IP to bypass Expo/Metro bundler cache of old .env values
-const BASE_URL = 'http://10.200.117.240:5000/dev/api/';
+// Hardcoding URL to bypass Expo/Metro bundler cache of old .env values
+const BASE_URL = 'https://4aq2buqunf.execute-api.eu-north-1.amazonaws.com/dev/api';
 
 export const api = axios.create({
   baseURL: BASE_URL.endsWith('/') ? BASE_URL : `${BASE_URL}/`,
@@ -117,7 +117,7 @@ export const createAppointment = async (data: any) => {
 };
 
 export const getLabAnalysis = async (labTestCode: string | number) => {
-  const response = await api.get('ehr/lab/analysis', { params: { labTestCode } });
+  const response = await api.get('/ehr/lab/analysis', { params: { labTestCode } });
   return response.data;
 };
 
@@ -125,3 +125,70 @@ export const getPackages = async (page: number = 1, limit: number = 6) => {
   const response = await api.get('packages', { params: { page, limit } });
   return response.data;
 };
+
+export const getErpPatient = async () => {
+  const response = await api.get('ehr/patient');
+  return response.data;
+};
+
+export const getErpAppointments = async (params: any = {}) => {
+  const response = await api.get('/ehr/appointments', { params });
+  return response.data;
+};
+
+export const getBills = async (params: any = {}) => {
+  const response = await api.get('/ehr/bills', { params });
+  return response.data;
+};
+
+export const getBasicLabReports = async (params: any = {}) => {
+  const response = await api.get('/ehr/lab/reports/basic_search', { params });
+  return response.data;
+};
+
+export const getPrescriptions = async (params: any = {}) => {
+  const response = await api.get('/ehr/prescriptions', { params });
+  return response.data;
+};
+
+export const getDischargeSummaries = async (params: any = {}) => {
+  const response = await api.get('/ehr/discharge', { params });
+  return response.data;
+};
+
+export const getLabResultsByReportId = async (labReportId: string | number) => {
+  const response = await api.get(`/ehr/lab/results/${labReportId}`);
+  return response.data;
+};
+
+export const downloadLabReportPdf = async (labReportId: string | number) => {
+  const response = await api.get(`/ehr/lab/reports/lrId/${labReportId}`, {
+    responseType: 'blob'
+  });
+  return response.data;
+};
+
+
+export const getLabResults = async (params: any = {}) => {
+  const response = await api.get('/ehr/lab', { params });
+  return response.data;
+};
+
+export const createEhrTempPatient = async (data: any) => {
+  const response = await api.post('/ehr/temp-patients', data);
+  return response.data;
+};
+
+export const getEhrTempPatients = async (params: any = {}) => {
+  const response = await api.get('/ehr/temp-patients', { params });
+  return response.data;
+};
+
+export const submitContactForm = async (data: any) => {
+  const response = await api.post('contact', data);
+  return response.data;
+};
+
+
+
+
