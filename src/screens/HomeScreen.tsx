@@ -274,6 +274,14 @@ export const HomeScreen = ({ navigation }: any) => {
       navigation.navigate('LabReports');
       return;
     }
+    if (href === 'Contact') {
+      navigation.navigate('Contact');
+      return;
+    }
+    if (href === 'Pending') {
+      navigation.navigate('Pendings');
+      return;
+    }
     Alert.alert("Coming Soon", `Navigation to ${href} will be implemented soon.`);
   };
 

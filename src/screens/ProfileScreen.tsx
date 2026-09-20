@@ -120,20 +120,27 @@ export const ProfileScreen = () => {
     );
   };
 
-  const formatDate = (d: string | undefined | null) => {
+  const formatDate = (d?: string | null) => {
     if (!d) return undefined;
-    let dateObj = new Date(d);
-    const parts = d.match(/^(\d{2})[-/](\d{2})[-/](\d{4})/);
-    if (parts) {
-      const [_, day, month, year] = parts;
-      dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    try {
+      let dateStr = d;
+      const timeMatch = d.match(/^(\d{2})[-/](\d{2})[-/](\d{4})(?:\s+(.*))?$/);
+      if (timeMatch) {
+        dateStr = `${timeMatch[3]}-${timeMatch[2]}-${timeMatch[1]}${timeMatch[4] ? 'T' + timeMatch[4] : ''}`;
+      } else {
+        const isoDash = /^\d{4}-\d{2}-\d{2}/.test(d);
+        dateStr = isoDash ? d : d.split("-").reverse().join("-");
+      }
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return d;
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    } catch {
+      return d;
     }
-    if (isNaN(dateObj.getTime())) return d;
-    return dateObj.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
   };
 
   const displayName = erpPatient?.fullName || erpPatient?.name || patient?.name || patient?.fullName || 'Patient';

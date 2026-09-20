@@ -11,15 +11,27 @@ export const PrescriptionsScreen = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'Recent';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return 'Recent';
-    return d.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
+  const formatDate = (d?: string | null) => {
+    if (!d) return 'Recent';
+    try {
+      let dateStr = d;
+      const timeMatch = d.match(/^(\d{2})[-/](\d{2})[-/](\d{4})(?:\s+(.*))?$/);
+      if (timeMatch) {
+        dateStr = `${timeMatch[3]}-${timeMatch[2]}-${timeMatch[1]}${timeMatch[4] ? 'T' + timeMatch[4] : ''}`;
+      } else {
+        const isoDash = /^\d{4}-\d{2}-\d{2}/.test(d);
+        dateStr = isoDash ? d : d.split("-").reverse().join("-");
+      }
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return d;
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return d;
+    }
   };
 
   const fetchPrescriptions = async () => {

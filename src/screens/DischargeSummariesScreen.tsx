@@ -11,15 +11,27 @@ export const DischargeSummariesScreen = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'Recent';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return 'Recent';
-    return d.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
+  const formatDate = (d?: string | null) => {
+    if (!d) return 'Recent';
+    try {
+      let dateStr = d;
+      const timeMatch = d.match(/^(\d{2})[-/](\d{2})[-/](\d{4})(?:\s+(.*))?$/);
+      if (timeMatch) {
+        dateStr = `${timeMatch[3]}-${timeMatch[2]}-${timeMatch[1]}${timeMatch[4] ? 'T' + timeMatch[4] : ''}`;
+      } else {
+        const isoDash = /^\d{4}-\d{2}-\d{2}/.test(d);
+        dateStr = isoDash ? d : d.split("-").reverse().join("-");
+      }
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return d;
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+    } catch {
+      return d;
+    }
   };
 
   const fetchSummaries = async () => {
@@ -56,9 +68,6 @@ export const DischargeSummariesScreen = () => {
           <Text style={styles.cardTitle}>{item.admissionId || 'Discharge Summary'}</Text>
           <Text style={styles.cardDate}>{formatDate(item.dischargeDate)}</Text>
         </View>
-        <TouchableOpacity style={styles.viewBtn} onPress={() => Alert.alert('View Details', 'Full detailed view for this record will be available soon.')}>
-          <Text style={styles.viewBtnText}>View</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );

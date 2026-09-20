@@ -65,27 +65,26 @@ export const PendingsScreen = () => {
     setRefreshing(false);
   }, [activeTab]);
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'Recent';
+  const formatDate = (d?: string | null) => {
+    if (!d) return 'Recent';
     try {
-      let dateObj = new Date(dateStr);
-      if (isNaN(dateObj.getTime())) {
-        const parts = dateStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})/);
-        if (parts) {
-          const [_, day, month, year] = parts;
-          dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        }
+      let dateStr = d;
+      const timeMatch = d.match(/^(\d{2})[-/](\d{2})[-/](\d{4})(?:\s+(.*))?$/);
+      if (timeMatch) {
+        dateStr = `${timeMatch[3]}-${timeMatch[2]}-${timeMatch[1]}${timeMatch[4] ? 'T' + timeMatch[4] : ''}`;
+      } else {
+        const isoDash = /^\d{4}-\d{2}-\d{2}/.test(d);
+        dateStr = isoDash ? d : d.split("-").reverse().join("-");
       }
-      if (isNaN(dateObj.getTime())) {
-        return dateStr.split(' ')[0];
-      }
-      return dateObj.toLocaleDateString("en-GB", {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return d;
+      return date.toLocaleDateString("en-GB", {
         day: "2-digit",
-        month: "long",
+        month: "short",
         year: "numeric",
       });
-    } catch (e) {
-      return dateStr.split(' ')[0];
+    } catch {
+      return d;
     }
   };
 
