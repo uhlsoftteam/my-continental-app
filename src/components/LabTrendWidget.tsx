@@ -5,7 +5,7 @@ import { getLabAnalysis } from '../services/api';
 import { getSafeRange } from '../utils/labReferenceRanges';
 
 const fmt = (d?: string | null) => {
-  if (!d) return "â€”";
+  if (!d) return "—";
   try {
     let dateObj = new Date(d);
     if (isNaN(dateObj.getTime())) {
@@ -18,8 +18,11 @@ const fmt = (d?: string | null) => {
     if (isNaN(dateObj.getTime())) {
       return d;
     }
-    const pad = (n: number) => n < 10 ? '0' + n : n;
-    return `${pad(dateObj.getDate())}-${pad(dateObj.getMonth() + 1)}-${dateObj.getFullYear()}`;
+    return dateObj.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
   } catch {
     return d;
   }
