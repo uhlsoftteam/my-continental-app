@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "MyContinental",
+    "name": "My Continental",
     "slug": "MyContinental",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/continental_hospital.jpg",
+    "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/continental_hospital.jpg",
       "resizeMode": "contain",
@@ -18,10 +18,11 @@
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/continental_hospital.jpg"
+        "foregroundImage": "./assets/icon.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.naim5829.MyContinental"
+      "package": "com.continental.mycontinental",
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
